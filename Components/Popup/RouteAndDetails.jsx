@@ -4,12 +4,11 @@ import styles from "./routeanddetails.module.scss";
 import { GoogleMap } from "@react-google-maps/api";
 import { DirectionsService, DirectionsRenderer } from "@react-google-maps/api";
 import axios from "axios";
-// import generatePDF from "../../utils/generatePDF";
+import generatePDF from "../../utils/generatePDF";
 import { AiFillCloseCircle } from "react-icons/ai";
 import { useRouter } from "next/navigation";
 import LogoAnim from "../../public/media/LogoAnimationLottie.json";
 import Lottie from "lottie-react";
-import dynamic from "next/dynamic";
 
 const mapStyles = {
   height: "200px",
@@ -257,7 +256,6 @@ const RouteAndDetails = (props) => {
     e
   ) => {
     e.preventDefault();
-    const generatePDF = dynamic(() => import("../../utils/generatePDF"));
     console.log("e");
     console.log(e);
     if (verifyCode(inputVerificationCode, actualVerificationCode)) {
@@ -279,36 +277,7 @@ const RouteAndDetails = (props) => {
       );
 
       let offerId = await createPriceOffer();
-      const handlePDFGeneration = (userDetails, props, offerId) => {
-        return new Promise((resolve, reject) => {
-          generatePDF(
-            userDetails,
-            props.route,
-            props.price,
-            props.carType,
-            offerId,
-            (pdfBlob) => {
-              if (pdfBlob) {
-                // Trigger the PDF download for the client
-                const blobURL = window.URL.createObjectURL(pdfBlob);
-                const tempLink = document.createElement("a");
-                tempLink.href = blobURL;
-                tempLink.setAttribute(
-                  "download",
-                  `הצעת מחיר סבן טורס-${offerId}.pdf`
-                );
-                document.body.appendChild(tempLink);
-                tempLink.click();
-                document.body.removeChild(tempLink);
-                window.URL.revokeObjectURL(blobURL);
-                resolve(pdfBlob); // Resolve the promise with the pdfBlob
-              } else {
-                reject(new Error("Failed to generate PDF blob")); // Reject the promise if no blob is returned
-              }
-            }
-          );
-        });
-      };
+
       // Assuming sendDataToApp is a synchronous operation
       sendDataToApp(props, userDetails, offerId);
 
@@ -390,6 +359,37 @@ const RouteAndDetails = (props) => {
       { offerId: offerId },
       userDetails
     );
+  };
+
+  const handlePDFGeneration = (userDetails, props, offerId) => {
+    return new Promise((resolve, reject) => {
+      generatePDF(
+        userDetails,
+        props.route,
+        props.price,
+        props.carType,
+        offerId,
+        (pdfBlob) => {
+          if (pdfBlob) {
+            // Trigger the PDF download for the client
+            const blobURL = window.URL.createObjectURL(pdfBlob);
+            const tempLink = document.createElement("a");
+            tempLink.href = blobURL;
+            tempLink.setAttribute(
+              "download",
+              `הצעת מחיר סבן טורס-${offerId}.pdf`
+            );
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+            window.URL.revokeObjectURL(blobURL);
+            resolve(pdfBlob); // Resolve the promise with the pdfBlob
+          } else {
+            reject(new Error("Failed to generate PDF blob")); // Reject the promise if no blob is returned
+          }
+        }
+      );
+    });
   };
 
   // Upload PDF and update the offer
